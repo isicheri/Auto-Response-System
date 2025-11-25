@@ -1,0 +1,13 @@
+{
+  "extends": "../typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "types": ["node"],
+    "sourceMap": true,
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": false,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

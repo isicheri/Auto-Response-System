@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum CallStatus {
+  pending
+  responded
+  recovered
+  lost
+}
+
+enum MessageScenario {
+  standard
+  afterHours
+  emergency
+}
+
+ model MissedCall {
+  id String @id @unique @default(uuid())
+  businessId     String
+  callerName     String
+  callerPhone    String
+  timestamp      DateTime           @default(now())
+  status         CallStatus         @default(pending)
+  estimatedValue Float?
+  business       Business           @relation(fields: [businessId], references: [id])
+  autoResponses  AutoResponse[]
+  customerResponse CustomerResponse?
+ }
+ 
+ model AutoResponse {
+  id String @id @unique @default(uuid())
+  missedCallId String
+  messageSent  String
+  sentAt       DateTime     @default(now())
+  templateUsed String
+  missedCall   MissedCall   @relation(fields: [missedCallId], references: [id])
+ }
+ 
+ model CustomerResponse {
+  id String @id @unique @default(uuid())
+  missedCallId String     @unique
+  responseText String
+  receivedAt   DateTime   @default(now())
+  wasRecovered Boolean    @default(false)
+  missedCall   MissedCall @relation(fields: [missedCallId], references: [id])
+ }
+ 
+ model MessageTemplate {
+  id String @id @unique @default(uuid())
+  businessId  String
+  name        String
+  messageBody String
+  scenario    MessageScenario
+  isActive    Boolean         @default(true)
+  business    Business        @relation(fields: [businessId], references: [id])
+ }
+ 
+ model Business {
+  id String @id @unique @default(uuid())
+  name          String
+  phone         String
+  twilioNumber  String
+  settings      String? // Using String to represent JSON for simplicity in SQLite
+  missedCalls   MissedCall[]
+  messageTemplates MessageTemplate[]
+ }
