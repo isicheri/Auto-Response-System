@@ -12,5 +12,7 @@ export const config = cleanEnv(process.env, {
 
     Frontend_Url: str({default: 'http://localhost:3000'}),
     
+    TWILIO_ACCOUNT_SID: str(),
+    TWILIO_AUTH_TOKEN: str()
 
 });

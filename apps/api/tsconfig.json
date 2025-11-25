@@ -7,7 +7,11 @@
     "exactOptionalPropertyTypes": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": false,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@autocall/db/*": ["../../packages/db/src/*"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist"]
