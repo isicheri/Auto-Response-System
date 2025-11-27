@@ -1,22 +1,34 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { ZodError } from 'zod';
-import HttpError from '../httperror';
+import { Request, Response, NextFunction, RequestHandler } from "express";
+import { ZodError } from "zod";
+import HttpError from "../httperror";
 
 export const responseHandler =
-  (method: RequestHandler) => async (req: Request, res: Response, next: NextFunction) => {
+  (method: RequestHandler) =>
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       await method(req, res, next);
-    } catch (error) {
-      let exceptions: HttpError;
+    } catch (error: unknown) {
+      let exception: HttpError;
+
       if (error instanceof HttpError) {
-        exceptions = error;
+        exception = error;
+      } else if (error instanceof ZodError) {
+        exception = new HttpError(
+          "Input validation error",
+          400, // Fixed: was 402 (Payment Required)
+          "validation error",
+          error
+        );
       } else {
-        if (error instanceof ZodError) {
-          exceptions = new HttpError('input validation error', 402, 'validation error', error);
-        } else {
-          exceptions = new HttpError('something went wrong!', 500, 'server error', error);
-        }
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        exception = new HttpError(
+          "Something went wrong!",
+          500,
+          "server error",
+          errorMessage
+        );
       }
-      next(exceptions);
+
+      next(exception);
     }
   };

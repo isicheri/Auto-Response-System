@@ -2,30 +2,40 @@
   "name": "@autocall/db",
   "version": "1.0.0",
   "description": "this is the project database package",
- "main": "dist/src/index.js",
-"types": "dist/src/index.d.ts",
-"exports": {
-  ".": {
-    "types": "./dist/src/index.d.ts",
-    "import": "./dist/src/index.js",
-    "require": "./dist/src/index.js"
-  }
-},
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
+    }
+  },
   "scripts": {
-   "build": "tsc --build tsconfig.json",
-   "clean": "rm -rf dist",
-   "postinstall": "prisma generate --schema=./prisma/schema.prisma"
+    "build": "tsc --build tsconfig.json",
+    "clean": "rm -rf dist",
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"
   },
-  "keywords": ["database","prisma","prisma-client","prisma-schema","prisma-generator","postgresql","sql"],
+  "keywords": [
+    "database",
+    "prisma",
+    "prisma-client",
+    "prisma-schema",
+    "prisma-generator",
+    "postgresql",
+    "sql"
+  ],
   "author": "@perferct",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^7.0.0",
+    "@prisma/client": "^6.0.0",
+    "@prisma/extension-accelerate": "^3.0.0",
     "@types/node": "^22.15.3",
     "dotenv": "^17.2.3",
-    "prisma": "^7.0.0"
+    "prisma": "^6.0.0",
+    "ts-node": "^10.9.2"
   }
 }

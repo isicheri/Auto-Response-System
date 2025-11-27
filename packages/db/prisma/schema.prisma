@@ -1,9 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
 }
 
 datasource db {
-  provider = "sqlite"
+   provider = "postgresql"
+   url      = env("DATABASE_URL")
 }
 
 enum CallStatus {
@@ -19,53 +21,68 @@ enum MessageScenario {
   emergency
 }
 
- model MissedCall {
-  id String @id @unique @default(uuid())
-  businessId     String
-  callerName     String
-  callerPhone    String
-  timestamp      DateTime           @default(now())
-  status         CallStatus         @default(pending)
-  estimatedValue Float?
-  business       Business           @relation(fields: [businessId], references: [id])
-  autoResponses  AutoResponse[]
+model MissedCall {
+  id               String            @id @default(uuid())
+  businessId       String
+  callerName       String
+  callerPhone      String
+  timestamp        DateTime          @default(now())
+  status           CallStatus        @default(pending)
+  estimatedValue   Float?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  autoResponses    AutoResponse[]
   customerResponse CustomerResponse?
- }
- 
- model AutoResponse {
-  id String @id @unique @default(uuid())
+
+  @@index([businessId])
+  @@index([callerPhone])
+  @@index([status])
+}
+
+model AutoResponse {
+  id           String     @id @default(uuid())
   missedCallId String
   messageSent  String
-  sentAt       DateTime     @default(now())
+  sentAt       DateTime   @default(now())
   templateUsed String
-  missedCall   MissedCall   @relation(fields: [missedCallId], references: [id])
- }
- 
- model CustomerResponse {
-  id String @id @unique @default(uuid())
+  missedCall   MissedCall @relation(fields: [missedCallId], references: [id], onDelete: Cascade)
+
+  @@index([missedCallId])
+}
+
+model CustomerResponse {
+  id           String     @id @default(uuid())
   missedCallId String     @unique
   responseText String
   receivedAt   DateTime   @default(now())
   wasRecovered Boolean    @default(false)
-  missedCall   MissedCall @relation(fields: [missedCallId], references: [id])
- }
- 
- model MessageTemplate {
-  id String @id @unique @default(uuid())
+  missedCall   MissedCall @relation(fields: [missedCallId], references: [id], onDelete: Cascade)
+}
+
+model MessageTemplate {
+  id          String          @id @default(uuid())
   businessId  String
   name        String
   messageBody String
   scenario    MessageScenario
   isActive    Boolean         @default(true)
-  business    Business        @relation(fields: [businessId], references: [id])
- }
- 
- model Business {
-  id String @id @unique @default(uuid())
-  name          String
-  phone         String
-  twilioNumber  String
-  settings      String? // Using String to represent JSON for simplicity in SQLite
-  missedCalls   MissedCall[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, name])
+  @@index([businessId])
+}
+
+model Business {
+  id               String            @id @default(uuid())
+  name             String
+  phone            String
+  twilioNumber     String            @unique
+  settings         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  missedCalls      MissedCall[]
   messageTemplates MessageTemplate[]
- }
+}

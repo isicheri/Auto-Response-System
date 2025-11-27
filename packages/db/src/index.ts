@@ -1,18 +1,23 @@
-import {PrismaClient} from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
+// ---- GLOBAL (fix for hot reload) ----
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 
-export const prisma = global.prisma || new PrismaClient({
+function createPrismaClient() {
+  return new PrismaClient({
   log: ["query", "info", "warn", "error"],
-});
+  errorFormat: "pretty",
+  });
+}
 
-if (process.env.NODE_ENV !== "production") global.prisma = prisma;
+export const prisma = global.prisma ?? createPrismaClient();
 
-// Re-export PrismaClient and all types
-export { PrismaClient } from "@prisma/client";
-export type * from "@prisma/client";
+if (process.env.NODE_ENV !== "production") {
+  global.prisma = prisma;
+}
 
-export default { prisma, PrismaClient };
+export default prisma;
+export { PrismaClient };
+export * from "@prisma/client";
