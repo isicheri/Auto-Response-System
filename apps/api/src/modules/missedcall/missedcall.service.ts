@@ -279,55 +279,49 @@ export class MissedCallService {
   /**
    * List calls with pagination and filtering
    */
-  async listCalls({ page, limit, status, businessId }: ListCallsQueryDto & { businessId: string }) {
-    const skip = (page - 1) * limit;
+ async listCalls({ page, limit, status, businessId }: ListCallsQueryDto & { businessId: string }) {
+  const skip = (page - 1) * limit;
 
-    // Build where clause
-    const where: Prisma.MissedCallWhereInput = {
-      businessId, //Filter by businessId
-    };
+  const where: any = {
+    businessId,
+  };
 
-    if (status) {
-      where.status = status;
-    }
-
-    // Execute queries in parallel
-    const [calls, totalCount] = await Promise.all([
-      this.prisma.missedCall.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: {
-          timestamp: "desc",
-        },
-        include: {
-          autoResponses: true,
-          customerResponse: true,
-        },
-      }),
-
-      this.prisma.missedCall.count({
-        where,
-      }),
-    ]);
-
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(totalCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
-
-    return {
-      calls,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalCount,
-        limit,
-        hasNextPage,
-        hasPreviousPage,
-      },
-    };
+  // Only add status filter if provided
+  if (status) {
+    where.status = status;
   }
+
+  const [calls, totalCount] = await Promise.all([
+    this.prisma.missedCall.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        timestamp: "desc",
+      },
+      include: {
+        autoResponses: true,
+        customerResponse: true,
+      },
+    }),
+
+    this.prisma.missedCall.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return {
+    calls,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalCount,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
+  };
+}
 
  
   async markCallAsRecovered({
@@ -338,30 +332,41 @@ export class MissedCallService {
    
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      const call = await tx.missedCall.update({
-        where: {
-          id: missedCallId,
-          businessId
-        },
-        data: {
-          estimatedValue,
-          status: "recovered"
-        },
-        include: {
-          customerResponse: true
-        }
-      })
+    // First verify ownership
+const call = await tx.missedCall.findUnique({
+  where: { id: missedCallId },
+  include: { customerResponse: true }
+});
+
+if (!call || call.businessId !== businessId) {
+  throw new Error("Call not found or unauthorized");
+}
+
+if (call.status === "pending") {
+  throw new Error("Cannot mark as recovered - customer hasn't responded yet");
+}
+
+
+    // Then update
+     await tx.missedCall.update({
+  where: { id: missedCallId },
+  data: {
+    estimatedValue,
+    status: "recovered"
+  }
+       });
+
       if(!call.customerResponse) {
         throw new Error("Customer response not found")
       }
-      await tx.customerResponse.update({
-        where: {
-          id: call.customerResponse?.id
-        },
-        data: {
-          wasRecovered: true
-        }
-      })
+
+     if (call.customerResponse) {
+  await tx.customerResponse.update({
+    where: { id: call.customerResponse.id },
+    data: { wasRecovered: true }
+  });
+}
+
       return call;
     })
    

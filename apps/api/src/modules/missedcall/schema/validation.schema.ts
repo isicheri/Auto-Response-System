@@ -43,10 +43,10 @@ export const TwilioSMSWebhookSchema = z.object({
 
 //Schema to validate query parameters
 export const ListCallsQuerySchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10),
-  status: z.enum(["pending", "responded", "recovered", "lost"]).default("pending"),
-})
+  page: z.coerce.number().min(1).default(1),  // ← z.coerce converts string to number
+  limit: z.coerce.number().min(1).max(100).default(20),
+  status: z.enum(["pending", "responded", "recovered", "lost"]).optional(), 
+});
 
 export const UpdateCallAsRecovered = z.object({
   missedCallId: z.string(),

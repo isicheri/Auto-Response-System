@@ -53,4 +53,10 @@ missedCallRouter.get(
   responseHandler(missedCallController.listCalls)
 )
 
+missedCallRouter.patch(
+  "/calls/recover",
+  businessMiddleware,
+  responseHandler(missedCallController.markCallAsRecovered)
+);
+
 export default missedCallRouter;
