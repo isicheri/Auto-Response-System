@@ -282,7 +282,7 @@ export class MissedCallService {
  async listCalls({ page, limit, status, businessId }: ListCallsQueryDto & { businessId: string }) {
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.MissedCallWhereInput = {
     businessId,
   };
 
